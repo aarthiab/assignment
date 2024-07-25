@@ -1,0 +1,47 @@
+import os
+import io
+import PyPDF2
+from fastapi import FastAPI, UploadFile, File
+from pydantic import BaseModel
+from dotenv import load_dotenv
+from transformers import pipeline
+
+# Load environment variables
+load_dotenv()
+
+app = FastAPI()
+
+class Query(BaseModel):
+    question: str
+
+pdf_text = ""
+
+def extract_text_from_pdf(pdf_file):
+    reader = PyPDF2.PdfReader(pdf_file)
+    text = ""
+    for page_num in range(len(reader.pages)):
+        page = reader.pages[page_num]
+        text += page.extract_text()
+    return text
+
+def get_hf_response(prompt):
+    model = pipeline("text-generation", model="gpt2")
+    response = model(prompt, max_length=150)
+    return response[0]['generated_text'].strip()
+
+@app.post("/upload_pdf/")
+async def upload_pdf(file: UploadFile = File(...)):
+    global pdf_text
+    pdf_text = extract_text_from_pdf(file.file)
+    return {"message": "PDF uploaded successfully"}
+
+@app.post("/query/")
+async def query_pdf(query: Query):
+    global pdf_text
+    prompt = f"{pdf_text}\n\nUser: {query.question}\nAI:"
+    response = get_hf_response(prompt)
+    return {"response": response}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
