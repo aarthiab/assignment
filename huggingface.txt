@@ -1,0 +1,28 @@
+git clone https://huggingface.co/spaces/Aarthisudha/A
+
+
+Create your streamlit app.py file:
+
+import streamlit as st
+
+x = st.slider('Select a value')
+st.write(x, 'squared is', x * x)
+
+
+Then commit and push:
+
+
+git add app.py
+git commit -m "Add application file"
+git push
+
+
+git add .
+
+
+git commit -m "Deploy FastAPI application with Docker"
+
+
+git push origin main
+
+https://huggingface.co/spaces/Aarthisudha/A
